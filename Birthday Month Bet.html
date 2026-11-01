@@ -1,0 +1,276 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Birthday Month Bet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one projector screen. Thin red header; left column = bets + scoreboard; right column = boxes + controls, with the reveal below. */
+:root{
+  --bg:#f7f4f3; --panel:#ffffff; --fg:#231d1d; --muted:#6a5f5f; --line:#dcd4d3;
+  --felt:#b60005; --felt-ink:#ffffff; --gold:#c98a00; --gold-soft:#fbefd2;
+  --win:#2a7a4b; --lose:#920d14; --bar:#b60005; --bar-bg:#f1e4e3;
+  --display:"Fraunces",Georgia,serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#1a1516; --panel:#241d1e; --fg:#eeeae9; --muted:#a39a99; --line:#3f3435;
+  --felt:#b60005; --felt-ink:#ffffff; --gold:#eba000; --gold-soft:#3a2a10;
+  --win:#5fc98a; --lose:#ff8a85; --bar:#e0393e; --bar-bg:#2e2325; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#1a1516; --panel:#241d1e; --fg:#eeeae9; --muted:#a39a99; --line:#3f3435;
+  --felt:#b60005; --felt-ink:#ffffff; --gold:#eba000; --gold-soft:#3a2a10;
+  --win:#5fc98a; --lose:#ff8a85; --bar:#e0393e; --bar-bg:#2e2325; color-scheme:dark }
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:clamp(13px,1.15vw,16px);line-height:1.4;
+  display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 10px;box-sizing:border-box}
+h1,h2{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:1.6em;font-weight:700}
+h2{font-size:1.15em;font-weight:600}
+p{margin:0}
+.eyebrow{font-size:.7em;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+header{background:var(--felt);color:var(--felt-ink);margin:0 calc(-1*max(16px,env(safe-area-inset-right,0px))) 10px calc(-1*max(16px,env(safe-area-inset-left,0px)));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;flex:none}
+header .inner{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 22px}
+header p{opacity:.92}
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(300px,1fr) minmax(0,1.6fr);gap:12px;align-items:start}
+.col-l,.col-r{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.bets{display:grid;gap:5px}
+.bet{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+.bet:has(input:checked){border-color:var(--gold);background:var(--gold-soft)}
+.bet input{width:17px;height:17px;accent-color:var(--felt)}
+.bet .name{font-weight:600}
+.bet .desc{color:var(--muted);font-size:.92em}
+.tag{font-family:var(--mono);font-size:.7em;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);visibility:hidden;white-space:nowrap}
+.tag.win{visibility:visible;color:var(--win);border-color:var(--win)}
+.tag.lose{visibility:visible;color:var(--lose);border-color:var(--lose)}
+button{font:inherit;font-weight:600;border-radius:8px;border:1px solid var(--felt);padding:7px 14px;cursor:pointer;background:var(--felt);color:var(--felt-ink)}
+button.secondary{background:transparent;color:var(--fg);border-color:var(--line)}
+button.gold{background:var(--gold);border-color:var(--gold);color:#1d1a10}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.stepper button{border:0;border-radius:0;background:transparent;color:var(--fg);padding:5px 11px;font-size:1.05em}
+.stepper span{font-family:var(--mono);min-width:3.5ch;text-align:center}
+.boxes{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;flex:none;height:clamp(130px,20vh,170px)}
+.box{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;min-height:0}
+.col{width:100%;flex:1;min-height:0;background:var(--bar-bg);border-radius:6px;position:relative;overflow:hidden}
+.col i{position:absolute;left:0;right:0;bottom:0;background:var(--bar);transition:height .12s linear}
+.col.hi i{background:var(--gold)}
+.box b{font-family:var(--mono);font-size:1.05em;font-weight:500;font-variant-numeric:tabular-nums}
+.box small{color:var(--muted);font-size:.7em}
+.status{color:var(--muted);font-size:.92em;font-variant-numeric:tabular-nums}
+.counter{font-family:var(--mono);font-size:1.6em;font-variant-numeric:tabular-nums;color:var(--felt);min-width:7ch;text-align:right}
+.counter small{font-family:var(--body);font-size:.5em;color:var(--muted);margin-left:.4em}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)}
+th{font-size:.7em;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.num,th.num{text-align:right}
+td.num{font-family:var(--mono);font-size:.95em}
+td .mine{font-size:.68em;color:var(--gold);font-weight:600;margin-left:6px;letter-spacing:.06em}
+tr.lost td{color:var(--lose)}
+.lower{display:grid;grid-template-columns:1fr;gap:10px;min-height:0}
+ol.q{margin:0;padding-left:1.3em;display:grid;gap:4px;font-size:1em}
+.reveal{display:grid;gap:6px}
+.rv{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:7px 10px;border-radius:8px;border:1px solid var(--line)}
+.rv .verdict{font-family:var(--mono);font-size:.75em;font-weight:500;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.rv.win .verdict{color:var(--win);border:1px solid var(--win)}
+.rv.lose .verdict{color:var(--lose);border:1px solid var(--lose)}
+.rv .why{color:var(--muted);font-size:.92em}
+.rv button{padding:3px 10px;font-size:.85em;margin-top:4px}
+@media (max-width:860px){ html,body{height:auto} main{grid-template-columns:1fr} .boxes{grid-template-columns:repeat(6,1fr);height:auto} .col{min-height:70px} }
+@media (prefers-reduced-motion:reduce){.col i{transition:none}}
+</style>
+
+<header><div class="inner">
+  <h1>Birthday Month Bet</h1>
+  <p><strong>78 students in CSE3006/AIE2070 Discrete Structures. 12 birth months.</strong> Place your bet before we check.</p>
+</div></header>
+
+<main>
+<div class="col-l">
+  <div class="card">
+    <div class="eyebrow">Round 1 · Place your bet</div>
+    <p>Which bet would you take? Tick every bet you think is <strong>guaranteed</strong> to win.</p>
+    <div class="bets" id="bets"></div>
+    <div class="row">
+      <button id="lock">Lock in my bets</button>
+      <span class="status" id="lockmsg"></span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="eyebrow">Scoreboard</div>
+    <table>
+      <thead><tr><th>Bet</th><th class="num">Wins</th><th class="num">Classes</th><th class="num">Win rate</th></tr></thead>
+      <tbody id="score"></tbody>
+    </table>
+    <div class="row">
+      <button id="revealbtn" class="gold">Reveal the results</button>
+      <button id="reset" class="secondary">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="col-r">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <span class="eyebrow">Round 2 · Let's gamble</span>
+        <span class="status">Students</span>
+        <div class="stepper"><button id="minus" aria-label="fewer balls">−</button><span id="nballs">78</span><button id="plus" aria-label="more balls">+</button></div>
+      </div>
+      <div class="row">
+        <button id="play1">Check 1 class</button>
+        <button id="play1000" class="secondary">Simulate 1,000</button>
+        <span class="counter" id="counter">0<small>classes</small></span>
+      </div>
+    </div>
+    <div class="boxes" id="boxes"></div>
+    <p class="status" id="roundmsg">No class checked yet.</p>
+  </div>
+  <div class="lower">
+    <div class="card reveal" id="reveal" hidden></div>
+  </div>
+</div>
+</main>
+
+<script>
+(function(){
+  var NB = 12;
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function spread(n,cap){ var a=[]; for(var i=0;i<NB;i++) a.push(0); var i=0; while(n>0){ if(a[i%NB]<cap){a[i%NB]++; n--;} i++; if(i>cap*NB+NB){ a[NB-1]+=n; break; } } return a; }
+  function atLeast(id,x){
+    var cap=x-1, tot=NB*cap;
+    return {id:id, name:'Bet '+id, desc:'At least '+x+' students share the same birth month.',
+      test:function(c){ return Math.max.apply(null,c) >= x; },
+      guaranteed:function(n){ return n > tot; },
+      why:function(n){ return n>tot ? 'If every month had at most '+cap+' students there would be at most 12 × '+cap+' = '+tot+' students. There are '+n+'. No luck involved.'
+                                    : 'Every month can stay at '+cap+' or fewer: 12 × '+cap+' = '+tot+' is more than '+n+'. It usually happens by chance, but it is not forced.'; },
+      counter:function(n){ return spread(n,cap); } };
+  }
+  var BETS = [atLeast('A',6), atLeast('B',7), atLeast('C',9), atLeast('D',10)];
+
+  var n = 78, counts = [], rounds = 0, wins = {A:0,B:0,C:0,D:0}, picks = {}, running = false;
+  for(var i=0;i<NB;i++) counts.push(0);
+  var $ = function(id){ return document.getElementById(id); };
+
+  var betsEl = $('bets');
+  BETS.forEach(function(b){
+    var l = document.createElement('label'); l.className='bet';
+    l.innerHTML = '<input type="checkbox" id="pick'+b.id+'"><span><span class="name">'+b.name+'</span> <span class="desc">'+b.desc+'</span></span><span class="tag" id="tag'+b.id+'"></span>';
+    betsEl.appendChild(l);
+  });
+  $('lock').addEventListener('click', function(){
+    picks = {}; var names=[];
+    BETS.forEach(function(b){ var c=$('pick'+b.id).checked; picks[b.id]=c; if(c) names.push(b.id); $('pick'+b.id).disabled=true; });
+    $('lock').disabled = true;
+    $('lockmsg').textContent = names.length ? 'Locked in: Bet '+names.join(', Bet ')+'.' : 'No bets taken.';
+    renderScore();
+  });
+
+  var boxesEl = $('boxes');
+  for(var i=0;i<NB;i++){
+    var d = document.createElement('div'); d.className='box';
+    d.innerHTML = '<div class="col" id="col'+i+'"><i style="height:0"></i></div><b id="cnt'+i+'">0</b><small>'+MONTHS[i]+'</small>';
+    boxesEl.appendChild(d);
+  }
+  function renderBoxes(){
+    var mx = Math.max(1, Math.max.apply(null,counts));
+    for(var i=0;i<NB;i++){
+      $('cnt'+i).textContent = counts[i];
+      var col = $('col'+i); col.querySelector('i').style.height = (100*counts[i]/mx)+'%';
+      col.className = 'col' + (counts[i]>=7 ? ' hi':'');
+    }
+  }
+  function oneRound(){
+    var c=[]; for(var i=0;i<NB;i++) c.push(0);
+    for(var k=0;k<n;k++) c[Math.floor(Math.random()*NB)]++;
+    return c;
+  }
+  function tally(c){ rounds++; BETS.forEach(function(b){ if(b.test(c)) wins[b.id]++; }); }
+  function fmt(x){ return x.toLocaleString(); }
+  function renderScore(){
+    var tb = $('score'); tb.innerHTML='';
+    var have = counts.some(function(x){return x>0;});
+    BETS.forEach(function(b){
+      var tr = document.createElement('tr');
+      if(have && !b.test(counts)) tr.className='lost';
+      var rate = rounds ? (100*wins[b.id]/rounds).toFixed(rounds>=1000?2:1)+'%' : '–';
+      tr.innerHTML = '<td>'+b.name+(picks[b.id]?'<span class="mine">YOUR BET</span>':'')+'</td><td class="num">'+fmt(wins[b.id])+'</td><td class="num">'+fmt(rounds)+'</td><td class="num">'+rate+'</td>';
+      tb.appendChild(tr);
+    });
+    $('counter').innerHTML = fmt(rounds)+'<small>classes</small>';
+  }
+  function describe(c, prefix){
+    var lost = BETS.filter(function(b){ return !b.test(c); }).map(function(b){ return b.name; });
+    var mi = c.indexOf(Math.max.apply(null,c));
+    $('roundmsg').textContent = prefix + ' Busiest month: '+MONTHS[mi]+' with '+c[mi]+' students, quietest month has '+Math.min.apply(null,c)+'. ' +
+      (lost.length ? 'Lost with this class: '+lost.join(', ')+'.' : 'Every bet won with this class.');
+  }
+  function setBusy(b){ running=b; $('play1').disabled=b; $('play1000').disabled=b; $('reset').disabled=b; }
+
+  $('play1').addEventListener('click', function(){
+    if(running) return;
+    counts = oneRound(); tally(counts); renderBoxes(); renderScore();
+    describe(counts, 'Class '+fmt(rounds)+': '+n+' students checked.');
+  });
+
+  // Simulate 1,000: run in fast batches so the counters visibly climb (~2 s), then show a losing round if one occurred.
+  $('play1000').addEventListener('click', function(){
+    if(running) return;
+    setBusy(true);
+    var total = 1000, done = 0, perFrame = 12, lossRound = {}, start = rounds;
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduced) perFrame = 1000;
+    function step(){
+      var k = Math.min(perFrame, total-done), last = null;
+      for(var r=0;r<k;r++){ var c=oneRound(); tally(c); BETS.forEach(function(b){ if(!b.test(c) && !lossRound[b.id]) lossRound[b.id]=c; }); last=c; }
+      done += k; counts = last; renderBoxes(); renderScore();
+      $('roundmsg').textContent = 'Simulating… '+fmt(done)+' of 1,000 classes';
+      if(done < total){ requestAnimationFrame(step); return; }
+      var shown = null;
+      BETS.forEach(function(b){ if(!shown && lossRound[b.id]) shown = lossRound[b.id]; });
+      if(shown) counts = shown;
+      renderBoxes(); renderScore();
+      describe(counts, '1,000 classes checked ('+fmt(rounds)+' total).' + (shown ? ' Showing a class where a bet lost.' : ' Showing the last class.'));
+      setBusy(false);
+    }
+    requestAnimationFrame(step);
+  });
+  $('reset').addEventListener('click', function(){
+    if(running) return;
+    rounds=0; wins={A:0,B:0,C:0,D:0}; for(var i=0;i<NB;i++) counts[i]=0;
+    renderBoxes(); renderScore(); $('roundmsg').textContent='No class checked yet.';
+    $('reveal').hidden = true;
+    BETS.forEach(function(b){ var t=$('tag'+b.id); t.className='tag'; t.textContent=''; });
+  });
+  function setN(v){ n=Math.max(1,Math.min(200,v)); $('nballs').textContent=n; }
+  $('minus').addEventListener('click', function(){ setN(n-1); });
+  $('plus').addEventListener('click', function(){ setN(n+1); });
+
+  $('revealbtn').addEventListener('click', function(){
+    var rv = $('reveal'); rv.innerHTML='';
+    var h = document.createElement('div'); h.innerHTML='<div class="eyebrow">The reveal</div><h2>Which bets are truly guaranteed with '+n+' students?</h2>'; rv.appendChild(h);
+    BETS.forEach(function(b){
+      var g = b.guaranteed(n);
+      var tag = $('tag'+b.id); tag.textContent = g ? 'GUARANTEED' : 'CAN LOSE'; tag.className = 'tag '+(g?'win':'lose');
+      var d = document.createElement('div'); d.className='rv '+(g?'win':'lose');
+      d.innerHTML = '<span class="verdict">'+(g?'Always wins':'Can lose')+'</span><div><div><strong>'+b.name+'.</strong> '+b.desc+'</div>'+
+        (g ? '' : '<button class="secondary" data-bet="'+b.id+'">Show a losing arrangement</button>')+'</div>';
+      rv.appendChild(d);
+    });
+    rv.hidden = false;
+    rv.querySelectorAll('button[data-bet]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var b = BETS.filter(function(x){return x.id===btn.getAttribute('data-bet');})[0];
+        counts = b.counter(n); renderBoxes(); renderScore();
+        describe(counts, 'A possible class of '+n+' students where '+b.name+' loses (not random).');
+      });
+    });
+  });
+
+  renderBoxes(); renderScore();
+})();
+</script>
+
+</body></html>

@@ -5,3 +5,4 @@ Galton Board:
 https://tianyuan09.github.io/galton-board/
 
 Tower of Hanoi Game:
+https://tianyuan09.github.io/galton-board/tower_of_hanoi_revised.html

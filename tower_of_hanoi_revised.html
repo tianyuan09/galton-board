@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#b20d1b">
+  <meta name="description" content="Tower of Hanoi: an interactive exercise in recursion and discrete mathematics.">
+  <title>Tower of Hanoi | Discrete Mathematics</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f4f1;
+      --panel: #ffffff;
+      --border: #d9d8d3;
+      --text: #272625;
+      --muted: #666661;
+      --accent: #b20d1b;
+      --accent-dark: #851622;
+      --red: #b20d1b;
+      --disk-step: 31px;
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+    }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible, .tower:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    button:disabled { opacity: .40; cursor: not-allowed; }
+    .app { max-width: 1270px; margin: 0 auto; padding: 26px clamp(18px, 4vw, 52px) 35px; }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center; gap: 20px;
+      padding: 0 0 22px; margin: 0 0 27px; border-bottom: 2px solid var(--accent);
+    }
+    .brand { display: flex; gap: 11px; align-items: center; font-size: 13px; font-weight: 700; letter-spacing: .035em; }
+    .top-caption { color: #64625f; font-size: 11px; letter-spacing: .055em; text-transform: uppercase; }
+    .layout { display: grid; grid-template-columns: minmax(280px, 322px) minmax(0,1fr); gap: 20px; align-items: start; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 5px; }
+    .side { padding: 28px 25px; }
+    .eyebrow { color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 13px; }
+    h1 { font-family: Arial, Helvetica, sans-serif; font-size: clamp(29px, 2.8vw, 35px); font-weight: 700; line-height: 1.18; letter-spacing: -.02em; margin: 0 0 16px; }
+    
+    .intro { color: #565652; font-size: 13px; line-height: 1.7; margin: 0 0 24px; }
+    .section-line { border-top: 1px solid var(--border); margin: 22px 0; }
+    .small-label { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: #32312f; margin-bottom: 11px; }
+    .small-label span { color: var(--muted); font-size: 11px; font-weight: 400; }
+    .difficulty { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .difficulty button { height: 37px; border: 1px solid #d7d6d1; border-radius: 3px; background: #fff; color: #474640; font-weight: 600; transition: border-color .15s ease, background .15s ease; }
+    .difficulty button:hover { border-color: var(--accent); }
+    .difficulty button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: white; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { padding: 13px 14px; border: 1px solid #e1e0dc; background: #fafaf9; border-radius: 3px; }
+    .stat-label { color: #65645f; font-size: 10px; letter-spacing: .035em; margin: 0 0 6px; }
+    .stat-num { font-family: Arial, Helvetica, sans-serif; font-size: 27px; font-weight: 700; line-height: 1.18; font-variant-numeric: tabular-nums; }
+    .stat-num.purple { color: var(--accent); }
+    .goal { margin: 19px 0; display: flex; align-items: flex-start; gap: 10px; color: #66645f; font-size: 12px; line-height: 1.65; }
+    .goal-icon { display: grid; place-items: center; flex: 0 0 25px; height: 25px; background: #f5e7e8; color: var(--accent); font-size: 16px; }
+    .goal strong { color: #292827; }
+    .primary, .secondary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 41px; padding: 10px 13px; border-radius: 3px; font-size: 12px; font-weight: 700; transition: background .15s ease, border-color .15s ease; }
+    .primary { background: var(--accent); border: 1px solid var(--accent); color: #fff; }
+    .primary:not(:disabled):hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+    .secondary { background: #fff; border: 1px solid #cbc9c4; color: #393733; }
+    .secondary:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
+    .side-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .side-actions .primary { grid-column: span 2; }
+    .keyboard-tip { padding-top: 18px; font-size: 11px; line-height: 1.7; color: #6f6e69; }
+    .keyboard-tip strong { color: #33312e; }
+    .maincol { min-width: 0; display: grid; gap: 18px; }
+    .board-panel { overflow: hidden; padding: 24px 25px 19px; }
+    .board-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .board-head h2 { font-size: 15px; font-weight: 700; margin: 0 0 4px; letter-spacing: -.01em; }
+    .board-head p { font-size: 12px; color: var(--muted); margin: 0; }
+    .timer { display: flex; flex: none; align-items: center; gap: 7px; color: #4c4a46; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .timer svg { color: #77756f; }
+    .board {
+      position: relative; display: flex; justify-content: space-evenly; align-items: stretch;
+      margin-top: 19px; min-height: 345px; padding: 16px 14px 10px;
+      border: 1px solid #e3e0d9; border-radius: 3px; background: #faf9f7;
+      touch-action: pan-y;
+    }
+    .tower { position: relative; width: 32%; height: 315px; isolation: isolate; border-radius: 3px; cursor: pointer; outline: none; transition: background .15s ease; -webkit-tap-highlight-color: transparent; }
+    .tower:hover { background: rgba(178,13,27,.035); }
+    .tower.selected { background: rgba(178,13,27,.075); }
+    .tower.drop-target { background: rgba(178,13,27,.10); }
+    .tower.hinted { background: rgba(178,13,27,.06); box-shadow: inset 0 0 0 1px rgba(178,13,27,.22); }
+    .rod { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 11px; height: 249px; border-radius: 4px 4px 0 0; background: linear-gradient(90deg,#b6b1a9,#d8d3ca 52%,#aaa49b); }
+    .base { position: absolute; bottom: 43px; left: 3%; right: 3%; height: 14px; border-radius: 3px; background: #77716a; border: 1px solid #66615b; }
+    .disks { position: absolute; inset: 0; pointer-events: none; }
+    .disk {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      bottom: calc(57px + var(--level) * var(--disk-step));
+      height: 30px; width: var(--width); z-index: calc(2 + var(--level));
+      border-radius: 4px;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--disk-color), #fff 15%), var(--disk-color) 55%, color-mix(in srgb, var(--disk-color), #211815 14%));
+      border: 1px solid rgba(38,30,26,.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.20), 0 2px 3px rgba(0,0,0,.13);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #231e1b;
+      pointer-events: none;
+    }
+    .disk.top-disk { pointer-events: auto; cursor: grab; touch-action: none; }
+    .disk.top-disk:active { cursor: grabbing; }
+    .tower.selected .disk.top-disk { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .disk.in-motion { visibility: hidden; }
+    .peg-footer { position: absolute; left: 0; right: 0; bottom: 3px; display: flex; justify-content: center; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #33312e; }
+    .peg-footer span { font-size: 10px; color: #807d77; font-weight: 400; }
+    .target .peg-footer { color: var(--accent); }
+    .target .peg-footer::before { content: ''; width: 5px; height: 5px; background: var(--accent); }
+    .feedback { display: flex; gap: 9px; min-height: 46px; align-items: center; padding: 12px 2px 2px; color: #5e5b56; font-size: 12px; line-height: 1.5; }
+    .feedback-dot { width: 6px; height: 6px; flex: 0 0 6px; background: var(--accent); }
+    .feedback.error { color: #a11d21; }
+    .feedback.error .feedback-dot { background: #a11d21; }
+    .feedback.success { color: #315b42; }
+    .feedback.success .feedback-dot { background: #487d59; }
+    .board-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 9px; }
+    .board-actions button { min-width: 120px; }
+    .board-actions .solve { background: #fff; border: 1px solid var(--accent); color: var(--accent); }
+    .board-actions .solve:not(:disabled):hover { background: #f9eeee; }
+    .spacer { flex: 1; }
+    .best { white-space: nowrap; font-size: 11px; color: #77746f; }
+    .best strong { color: #383532; font-weight: 600; }
+    .math-panel { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 13px 24px; padding: 22px 25px; }
+    .math-panel .eyebrow { margin-bottom: 7px; }
+    .math-panel h3 { font-family: Arial, Helvetica, sans-serif; margin: 0 0 7px; font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+    .math-panel p { margin: 0; color: #66645f; font-size: 12px; line-height: 1.7; }
+    .formula { min-width: 177px; padding: 12px 16px; text-align: center; background: #f8f6f4; border-left: 3px solid var(--accent); }
+    .formula .big { font-family: Arial, Helvetica, sans-serif; color: var(--accent); font-size: 23px; font-weight: 700; letter-spacing: -.025em; }
+    .formula .formula-caption { margin-top: 3px; color: #696661; font-size: 10px; letter-spacing: .04em; }
+    .math-toggle { grid-column: 1 / -1; width: fit-content; display: flex; align-items: center; gap: 7px; background: none; border: 0; padding: 3px 0; color: var(--accent); font-size: 12px; font-weight: 700; }
+    .math-toggle svg { transition: transform .2s; }
+    .math-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+    .math-details { grid-column: 1 / -1; padding: 16px 18px; background: #f9f8f6; border: 1px solid #e4e1dc; border-radius: 3px; font-size: 12px; line-height: 1.8; color: #55524e; }
+    .math-details strong { color: #292724; }
+    .equation { display: inline-block; margin: 8px 0; padding: 5px 10px; border-left: 2px solid var(--accent); background: white; color: var(--accent); font-family: Arial, Helvetica, sans-serif; font-size: 16px; }
+    footer { margin-top: 24px; text-align: center; color: #787671; font-size: 10px; letter-spacing: .025em; }
+    .win-overlay { position: absolute; z-index: 30; inset: 0; display: grid; place-items: center; background: rgba(29,25,23,.60); backdrop-filter: blur(3px); padding: 16px; }
+    .win-card { position: relative; width: min(350px,100%); background: white; border: 1px solid #ddd8d1; border-top: 4px solid var(--accent); box-shadow: 0 18px 45px rgba(0,0,0,.18); border-radius: 3px; text-align: center; padding: 25px 21px; }
+    .win-icon { display: grid; place-items: center; margin: 0 auto 13px; width: 44px; height: 44px; background: #f7e7e8; color: var(--accent); font-size: 22px; }
+    .win-card h3 { margin: 0 0 8px; font-family: Arial, Helvetica, sans-serif; font-weight: 700; font-size: 23px; }
+    .win-card p { color: #6a6763; font-size: 12px; line-height: 1.6; margin: 0 0 18px; }
+    .win-card .primary { width: 100%; }
+    .win-close { position: absolute; right: 10px; top: 7px; padding: 3px 9px; background: none; border: none; font-size: 22px; color: #615c57; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1010px) {
+      .layout { grid-template-columns: 260px minmax(0,1fr); gap: 14px; }
+      .side { padding: 21px; }
+      .board-panel { padding: 23px 18px 20px; }
+      .board { padding-inline: 6px; }
+    }
+    @media (max-width: 790px) {
+      .app { padding: 19px 14px 32px; }
+      .topbar { margin-bottom: 18px; }
+      .layout { grid-template-columns: 1fr; }
+      .side { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+      .hero { grid-column: 1 / -1; }
+      .intro { margin-bottom: 16px; }
+      .side .section-line { display: none; }
+      .level-controls { grid-column: 1 / -1; margin-bottom: 16px; }
+      .stats { grid-column: 1 / -1; }
+      .goal { grid-column: 1 / -1; margin: 16px 0; }
+      .side-actions { grid-column: 1 / -1; display: flex; }
+      .side-actions .primary { flex: 1.4; }
+      .side-actions .secondary { flex: 1; }
+      .keyboard-tip { grid-column: 1 / -1; padding-top: 12px; }
+    }
+    @media (max-width: 520px) {
+      .top-caption { display: none; }
+      .side { padding: 22px; }
+      .board-panel { padding: 18px 13px; }
+      .board-head h2 { font-size: 14px; }
+      .board-head p { font-size: 11px; }
+      .timer { font-size: 13px; }
+      .board { min-height: 318px; padding: 8px 3px 4px; }
+      .tower { height: 302px; }
+      .rod { height: 243px; bottom: 45px; width: 9px; }
+      .base { bottom: 39px; height: 12px; }
+      .disk { bottom: calc(51px + var(--level) * 30px); height: 29px; }
+      .peg-footer { bottom: 0; font-size: 11px; gap: 4px; }
+      .peg-footer span { font-size: 9px; }
+      .math-panel { grid-template-columns: 1fr; padding: 20px; }
+      .formula { grid-row: 2; justify-self: stretch; }
+      .math-toggle { grid-row: 3; }
+      .math-details { grid-row: 4; }
+      .board-actions button { flex: 1; min-width: 0; }
+      .board-actions .spacer { display: none; }
+      .best { width: 100%; margin-top: 4px; text-align: center; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">Discrete Mathematics</div>
+    <div class="top-caption">Recursion · Interactive exercise</div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel side">
+      <div class="hero">
+        <p class="eyebrow">Interactive exercise</p>
+        <h1>Tower of Hanoi</h1>
+        <p class="intro">Move all the disks from peg A to peg C. You may move only one disk at a time, and a larger disk must never sit on a smaller one.</p>
+      </div>
+      <div class="section-line"></div>
+      <div class="level-controls">
+        <div class="small-label">Difficulty level <span><span id="diskCountLabel">3</span> disks</span></div>
+        <div class="difficulty" id="difficulty" role="group" aria-label="Number of disks"></div>
+      </div>
+      <div class="section-line"></div>
+      <div class="stats">
+        <div class="stat"><div class="stat-label">YOUR MOVES</div><div class="stat-num" id="moveCount">0</div></div>
+        <div class="stat"><div class="stat-label">MINIMUM MOVES</div><div class="stat-num purple" id="minimumMoves">7</div></div>
+      </div>
+      <div class="goal"><div class="goal-icon" aria-hidden="true">→</div><div><strong>Objective</strong><br>Transfer the stack from A to C, using B as an intermediate peg.</div></div>
+      <div class="side-actions">
+        <button type="button" class="primary" id="resetBtn"><span aria-hidden="true">↻</span> New game</button>
+        <button type="button" class="secondary" id="undoBtn"><span aria-hidden="true">↶</span> Undo</button>
+        <button type="button" class="secondary" id="hintBtn"><span aria-hidden="true">✧</span> Hint</button>
+      </div>
+      <div class="keyboard-tip"><strong>How to play:</strong> Select a top disk, then select a destination peg. Or drag a top disk to another peg. Use arrow keys and Enter to play with the keyboard.</div>
+    </aside>
+
+    <div class="maincol">
+      <section class="panel board-panel" aria-label="Tower of Hanoi game">
+        <div class="board-head">
+          <div><h2>Puzzle board</h2><p>Move the full stack to the rightmost peg.</p></div>
+          <div class="timer" title="Elapsed time">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="17" height="17"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg><span id="timer">00:00</span>
+          </div>
+        </div>
+        <div class="board" id="board" aria-label="Three puzzle pegs">
+          <div class="tower" id="tower0" data-peg="0" role="button" tabindex="0" aria-label="Peg A" aria-pressed="false"><div class="rod"></div><div class="disks"></div><div class="base"></div><div class="peg-footer">A <span>START</span></div></div>
+          <div class="tower" id="tower1" data-peg="1" role="button" tabindex="0" aria-label="Peg B" aria-pressed="false"><div class="rod"></div><div class="disks"></div><div class="base"></div><div class="peg-footer">B <span>HELPER</span></div></div>
+          <div class="tower target" id="tower2" data-peg="2" role="button" tabindex="0" aria-label="Peg C" aria-pressed="false"><div class="rod"></div><div class="disks"></div><div class="base"></div><div class="peg-footer">C <span>GOAL</span></div></div>
+          <div class="win-overlay" id="winOverlay" hidden>
+            <div class="win-card" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+              <button type="button" class="win-close" id="winClose" aria-label="Close win message">×</button>
+              <div class="win-icon" aria-hidden="true">✦</div>
+              <h3 id="winTitle">Puzzle solved!</h3>
+              <p id="winText"></p>
+              <button type="button" class="primary" id="winAgain">Play again ↗</button>
+            </div>
+          </div>
+        </div>
+        <div class="feedback" id="feedback" role="status" aria-live="polite"><span class="feedback-dot" aria-hidden="true"></span><span id="feedbackText">Choose the top disk on peg A to get started.</span></div>
+        <div class="board-actions">
+          <button type="button" class="secondary solve" id="solveBtn"><span id="solveIcon" aria-hidden="true">▷</span><span id="solveText">Watch solution</span></button>
+          <span class="spacer"></span><span class="best">Personal best&nbsp;  <strong id="personalBest">—</strong></span>
+        </div>
+      </section>
+
+      <section class="panel math-panel" aria-label="Mathematics behind the puzzle">
+        <div>
+          <p class="eyebrow">Discrete mathematics</p>
+          <h3>Why 2ⁿ − 1 moves?</h3>
+          <p>The minimum number of moves grows exponentially with the number of disks. The recurrence below explains why.</p>
+        </div>
+        <div class="formula"><div class="big" id="formulaValue">2³ − 1 = 7</div><div class="formula-caption">MINIMUM MOVES</div></div>
+        <button type="button" class="math-toggle" id="mathToggle" aria-expanded="false" aria-controls="mathDetails">See why the formula works <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="math-details" id="mathDetails" hidden>
+          To move <strong>n disks</strong> from A to C: first move the top <strong>n − 1</strong> disks to B; next move the largest disk to C (1 move); finally move the <strong>n − 1</strong> disks from B to C.<br>
+          <span class="equation">T(n) = 2T(n − 1) + 1</span><br>
+          With <strong>T(1) = 1</strong>, solving this recurrence gives <strong>T(n) = 2ⁿ − 1</strong>. Each extra disk nearly doubles the work. That's recursion in action.
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer>Tower of Hanoi · Recursion and mathematical reasoning</footer>
+</div>
+<script>
+(() => {
+  'use strict';
+  const COLORS = ['#df9a93', '#ddb383', '#cbb76d', '#94a787', '#7ba8aa', '#86a0bd', '#a999b6', '#c2929a'];
+  const PEG_NAMES = ['A', 'B', 'C'];
+  const $ = id => document.getElementById(id);
+  const towers = Array.from(document.querySelectorAll('.tower'));
+  const difficulty = $('difficulty');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  let n = 3;
+  let pegs = [];
+  let moves = 0;
+  let history = [];
+  let selectedPeg = null;
+  let hintMove = null;
+  let assisted = false;
+  let startedAt = null;
+  let elapsedFrozen = 0;
+  let won = false;
+  let locked = false;
+  let autoRunning = false;
+  let playToken = 0;
+  let gameEpoch = 0;
+  let movingDisk = null;
+  let activeAnimation = null;
+  let activeGhost = null;
+  let drag = null;
+
+  // Return the uppermost disk, or null if a peg is empty.
+  const top = peg => pegs[peg].length ? pegs[peg][pegs[peg].length - 1] : null;
+  const minimum = () => 2 ** n - 1;
+  const formatTime = seconds => `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(seconds % 60).padStart(2,'0')}`;
+  function elapsedSeconds() {
+    return startedAt !== null ? Math.floor((Date.now() - startedAt) / 1000) : elapsedFrozen;
+  }
+  function updateTimer() { $('timer').textContent = formatTime(elapsedSeconds()); }
+  function message(text, kind = '') {
+    $('feedback').className = `feedback ${kind}`.trim();
+    $('feedbackText').textContent = text;
+  }
+  function getBest() {
+    try { return JSON.parse(localStorage.getItem(`tower-hanoi-best-${n}`)); } catch { return null; }
+  }
+  function updateBest() {
+    const best = getBest();
+    $('personalBest').textContent = best ? `${best.moves} moves · ${formatTime(best.time)}` : '—';
+  }
+  function updateControls() {
+    $('undoBtn').disabled = locked || autoRunning || history.length === 0 || won;
+    $('hintBtn').disabled = locked || autoRunning || won;
+    $('solveBtn').disabled = won && !autoRunning;
+    $('solveText').textContent = autoRunning ? 'Stop solution' : 'Watch solution';
+    $('solveIcon').textContent = autoRunning ? '■' : '▷';
+    $('moveCount').textContent = moves;
+    $('minimumMoves').textContent = minimum();
+    $('diskCountLabel').textContent = n;
+    $('formulaValue').textContent = `2${String(n).split('').map(c => '⁰¹²³⁴⁵⁶⁷⁸⁹'[Number(c)]).join('')} − 1 = ${minimum()}`;
+    document.querySelectorAll('.difficulty button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.count) === n)));
+  }
+  function render() {
+    for (let i = 0; i < 3; i++) {
+      const tower = towers[i];
+      const container = tower.querySelector('.disks');
+      container.replaceChildren();
+      tower.classList.toggle('selected', selectedPeg === i);
+      tower.classList.toggle('hinted', hintMove && (hintMove.from === i || hintMove.to === i));
+      tower.setAttribute('aria-pressed', String(selectedPeg === i));
+      const contents = pegs[i];
+      tower.setAttribute('aria-label', `Peg ${PEG_NAMES[i]}, ${contents.length} disk${contents.length === 1 ? '' : 's'}${contents.length ? ', top disk ' + top(i) : ''}`);
+      contents.forEach((disk, level) => {
+        const el = document.createElement('div');
+        el.className = 'disk' + (level === contents.length - 1 ? ' top-disk' : '') + (disk === movingDisk ? ' in-motion' : '');
+        el.dataset.disk = disk;
+        el.dataset.source = i;
+        el.style.setProperty('--level', level);
+        el.style.setProperty('--width', `${33 + (disk / n) * 55}%`);
+        el.style.setProperty('--disk-color', COLORS[(disk - 1) % COLORS.length]);
+        el.textContent = disk;
+        el.setAttribute('aria-hidden', 'true');
+        container.append(el);
+        if (level === contents.length - 1) {
+          el.addEventListener('pointerdown', startDiskPointer);
+          el.addEventListener('click', e => e.stopPropagation());
+        }
+      });
+    }
+    updateControls();
+    updateTimer();
+  }
+  function stopAuto() {
+    autoRunning = false;
+    ++playToken;
+    updateControls();
+  }
+  function cancelMotion() {
+    if (activeAnimation) { activeAnimation.cancel(); activeAnimation = null; }
+    if (activeGhost) { activeGhost.remove(); activeGhost = null; }
+    movingDisk = null;
+    locked = false;
+  }
+  function reset(nextN = n) {
+    ++gameEpoch;
+    stopAuto();
+    cancelMotion();
+    n = nextN;
+    pegs = [Array.from({length:n}, (_,i) => n - i), [], []];
+    moves = 0;
+    history = [];
+    selectedPeg = null;
+    hintMove = null;
+    startedAt = null;
+    elapsedFrozen = 0;
+    won = false;
+    assisted = false;
+    $('winOverlay').hidden = true;
+    message('Choose the top disk on peg A to get started.');
+    render();
+    updateBest();
+  }
+  function canMove(from, to) {
+    if (from === to || top(from) === null) return false;
+    return top(to) === null || top(from) < top(to);
+  }
+  async function performMove(from, to) {
+    if (locked || won || !canMove(from,to)) return false;
+    locked = true;
+    const epochAtStart = gameEpoch;
+    const disk = top(from);
+    const startEl = towers[from].querySelector('.disk.top-disk');
+    const startRect = startEl?.getBoundingClientRect();
+    history.push({pegs: pegs.map(p => [...p]), moves});
+    pegs[from].pop();
+    pegs[to].push(disk);
+    moves++;
+    if (startedAt === null) startedAt = Date.now();
+    selectedPeg = null;
+    hintMove = null;
+    movingDisk = disk;
+    render();
+    const destEl = towers[to].querySelector(`.disk[data-disk="${disk}"]`);
+    const endRect = destEl?.getBoundingClientRect();
+    if (startRect && endRect && !reducedMotion.matches) {
+      const ghost = startEl.cloneNode(true);
+      activeGhost = ghost;
+      Object.assign(ghost.style, {
+        position:'fixed', left: startRect.left+'px', top: startRect.top+'px', width: startRect.width+'px',
+        height: startRect.height+'px', bottom:'auto', transform:'none', zIndex:'9999', margin:'0',
+        visibility:'visible', pointerEvents:'none', willChange:'transform'
+      });
+      document.body.appendChild(ghost);
+      const dx = endRect.left-startRect.left, dy = endRect.top-startRect.top;
+      const lift = Math.min(-39, dy / 2 - 55);
+      try {
+        activeAnimation = ghost.animate([
+          {transform:'translate(0px, 0px)', offset:0},
+          {transform:`translate(${dx*.5}px, ${lift}px)`, offset:.48},
+          {transform:`translate(${dx}px, ${dy}px)`, offset:1}
+        ], {duration: 440, easing:'ease-in-out'});
+        await activeAnimation.finished;
+      } catch { /* Animation was cancelled by reset. */ }
+      ghost.remove();
+      if (activeGhost === ghost) activeGhost = null;
+      activeAnimation = null;
+    }
+    if (epochAtStart !== gameEpoch) return false;
+    movingDisk = null;
+    locked = false;
+    if (pegs[2].length === n) finishGame();
+    else message(`Moved disk ${disk} from ${PEG_NAMES[from]} to ${PEG_NAMES[to]}.`, 'success');
+    render();
+    return true;
+  }
+  function finishGame() {
+    won = true;
+    elapsedFrozen = elapsedSeconds();
+    startedAt = null;
+    stopAuto();
+    const optimal = moves === minimum();
+    let record = false;
+    const best = getBest();
+    if (!assisted && (!best || moves < best.moves || moves === best.moves && elapsedFrozen < best.time)) {
+      try { localStorage.setItem(`tower-hanoi-best-${n}`, JSON.stringify({moves, time:elapsedFrozen})); record = true; } catch { /* Storage may be disabled. */ }
+    }
+    $('winTitle').textContent = optimal ? 'Perfectly solved!' : 'Puzzle solved!';
+    $('winText').textContent = `You solved ${n} disks in ${moves} moves and ${formatTime(elapsedFrozen)}. The theoretical minimum is ${minimum()} moves.${assisted ? ' Solver assistance was used.' : record ? ' New personal best!' : optimal ? ' Optimal solution — well done!' : ''}`;
+    $('winOverlay').hidden = false;
+    message('All disks reached peg C. Puzzle complete!', 'success');
+    updateBest();
+    $('winAgain').focus();
+  }
+  function handleTowerClick(peg) {
+    if (locked || won || autoRunning) return;
+    if (selectedPeg === null) {
+      if (top(peg) === null) { message(`Peg ${PEG_NAMES[peg]} is empty. Choose a peg with a disk.`, 'error'); return; }
+      selectedPeg = peg;
+      hintMove = null;
+      message(`Disk ${top(peg)} selected. Choose a destination peg.`);
+    } else if (selectedPeg === peg) {
+      selectedPeg = null;
+      message('Selection cleared. Choose a top disk.');
+    } else if (!canMove(selectedPeg, peg)) {
+      message('Illegal move! A larger disk cannot sit on a smaller one.', 'error');
+    } else {
+      void performMove(selectedPeg, peg);
+    }
+    render();
+  }
+  function undo() {
+    if (locked || autoRunning || !history.length || won) return;
+    const previous = history.pop();
+    pegs = previous.pegs;
+    moves = previous.moves;
+    selectedPeg = null;
+    hintMove = null;
+    message('Last move undone. Choose your next move.');
+    render();
+  }
+  // Encode a legal puzzle state as a string: the character at index i tells
+  // us the peg containing disk (i + 1). A breadth-first search finds the
+  // shortest remaining solution, even if the player has taken a detour.
+  function stateKey() {
+    const positions = Array(n);
+    pegs.forEach((stack, peg) => stack.forEach(disk => { positions[disk-1] = String(peg); }));
+    return positions.join('');
+  }
+  function shortestPath() {
+    const start = stateKey(), goal = '2'.repeat(n);
+    if (start === goal) return [];
+    const queue = [start];
+    let head = 0;
+    const previous = new Map([[start, null]]);
+    let found = false;
+    while (head < queue.length && !found) {
+      const state = queue[head++];
+      const upper = [null,null,null];
+      for (let d = 0; d < n; d++) {
+        const peg = Number(state[d]);
+        if (upper[peg] === null) upper[peg] = d;
+      }
+      for (let from = 0; from < 3 && !found; from++) {
+        const disk = upper[from];
+        if (disk === null) continue;
+        for (let to = 0; to < 3; to++) {
+          if (from === to || upper[to] !== null && upper[to] < disk) continue;
+          const next = state.slice(0,disk) + to + state.slice(disk+1);
+          if (previous.has(next)) continue;
+          previous.set(next, {parent:state, move:{from,to,disk:disk+1}});
+          if (next === goal) { found = true; break; }
+          queue.push(next);
+        }
+      }
+    }
+    if (!previous.has(goal)) return [];
+    const result = [];
+    for (let state = goal; state !== start;) {
+      const entry = previous.get(state);
+      result.push(entry.move);
+      state = entry.parent;
+    }
+    return result.reverse();
+  }
+  function showHint() {
+    if (locked || autoRunning || won) return;
+    const path = shortestPath();
+    if (!path.length) return;
+    assisted = true;
+    hintMove = path[0];
+    selectedPeg = null;
+    message(`Hint: move disk ${hintMove.disk} from peg ${PEG_NAMES[hintMove.from]} to peg ${PEG_NAMES[hintMove.to]}.`);
+    render();
+  }
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  async function runSolver() {
+    if (autoRunning) { stopAuto(); message('Solver stopped. Continue solving on your own.'); return; }
+    if (locked || won) return;
+    assisted = true;
+    autoRunning = true;
+    const token = ++playToken;
+    const path = shortestPath();
+    selectedPeg = null;
+    hintMove = null;
+    render();
+    message(`Showing the shortest solution from this position: ${path.length} remaining moves.`);
+    for (const move of path) {
+      if (!autoRunning || token !== playToken) break;
+      await performMove(move.from,move.to);
+      if (!autoRunning || token !== playToken || won) break;
+      await sleep(120);
+    }
+    if (token === playToken && !won) {
+      autoRunning = false;
+      updateControls();
+      message('Solver stopped. Continue solving on your own.');
+    }
+  }
+  function startDiskPointer(e) {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (locked || autoRunning || won) return;
+    e.preventDefault();
+    e.stopPropagation();
+    drag = {from: Number(e.currentTarget.dataset.source), disk: Number(e.currentTarget.dataset.disk), x:e.clientX,y:e.clientY, dragging:false, ghost:null, origin:e.currentTarget};
+    window.addEventListener('pointermove', moveDiskPointer, {passive:false});
+    window.addEventListener('pointerup', endDiskPointer);
+    window.addEventListener('pointercancel', cancelDiskPointer);
+  }
+  function pegAt(x,y) {
+    for (let i=0;i<3;i++) {
+      const rect=towers[i].getBoundingClientRect();
+      if (x>=rect.left && x<=rect.right && y>=rect.top && y<=rect.bottom) return i;
+    }
+    return null;
+  }
+  function moveDiskPointer(e) {
+    if (!drag) return;
+    if (!drag.dragging && Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>8) {
+      drag.dragging = true;
+      const rect = drag.origin.getBoundingClientRect();
+      const ghost = drag.origin.cloneNode(true);
+      Object.assign(ghost.style, {position:'fixed', left:'0px',top:'0px',width:rect.width+'px',height:rect.height+'px',bottom:'auto',transform:'none',pointerEvents:'none',zIndex:'9999',boxShadow:'0 12px 24px rgba(0,0,0,.4)',opacity:'.94',margin:'0'});
+      document.body.appendChild(ghost);
+      drag.ghost = ghost;
+      drag.origin.style.opacity = '.25';
+    }
+    if (drag.dragging) {
+      e.preventDefault();
+      const rect=drag.ghost.getBoundingClientRect();
+      drag.ghost.style.left = (e.clientX-rect.width/2)+'px';
+      drag.ghost.style.top = (e.clientY-rect.height/2)+'px';
+      const hovered = pegAt(e.clientX,e.clientY);
+      towers.forEach((tower,i)=>tower.classList.toggle('drop-target', i === hovered && i !== drag.from));
+    }
+  }
+  function cleanupDrag() {
+    window.removeEventListener('pointermove',moveDiskPointer);
+    window.removeEventListener('pointerup',endDiskPointer);
+    window.removeEventListener('pointercancel',cancelDiskPointer);
+    towers.forEach(t=>t.classList.remove('drop-target'));
+    if (drag?.ghost) drag.ghost.remove();
+    if (drag?.origin) drag.origin.style.opacity = '';
+  }
+  function endDiskPointer(e) {
+    if (!drag) return;
+    const {from,dragging} = drag;
+    const destination = dragging ? pegAt(e.clientX,e.clientY) : null;
+    cleanupDrag();
+    drag = null;
+    if (!dragging) handleTowerClick(from);
+    else if (destination !== null && destination !== from) {
+      if (canMove(from,destination)) void performMove(from,destination);
+      else message('Illegal move! A larger disk cannot sit on a smaller one.', 'error');
+    }
+  }
+  function cancelDiskPointer() { cleanupDrag(); drag=null; }
+
+  for (let count=1;count<=5;count++) {
+    const button = document.createElement('button');
+    button.type='button';
+    button.textContent=count;
+    button.dataset.count=count;
+    button.setAttribute('aria-pressed',String(count===n));
+    button.setAttribute('aria-label',`Level ${count}: ${count} disk${count === 1 ? '' : 's'}`);
+    button.addEventListener('click',()=>reset(count));
+    difficulty.append(button);
+  }
+  towers.forEach((tower,i)=>{
+    tower.addEventListener('click',()=>handleTowerClick(i));
+    tower.addEventListener('keydown',e=>{
+      if(e.key==='Enter' || e.key===' ') { e.preventDefault(); handleTowerClick(i); }
+      else if(e.key==='ArrowRight' || e.key==='ArrowLeft') {e.preventDefault();towers[(i+(e.key==='ArrowRight'?1:2))%3].focus();}
+    });
+  });
+  $('resetBtn').addEventListener('click',()=>reset());
+  $('undoBtn').addEventListener('click',undo);
+  $('hintBtn').addEventListener('click',showHint);
+  $('solveBtn').addEventListener('click',()=>void runSolver());
+  $('winAgain').addEventListener('click',()=>reset());
+  $('winClose').addEventListener('click',()=>{$('winOverlay').hidden=true;});
+  $('mathToggle').addEventListener('click',()=>{
+    const expanded = $('mathToggle').getAttribute('aria-expanded') === 'true';
+    $('mathToggle').setAttribute('aria-expanded',String(!expanded));
+    $('mathDetails').hidden = expanded;
+  });
+  window.setInterval(updateTimer,1000);
+  reset();
+})();
+</script>
+</body>
+</html>
